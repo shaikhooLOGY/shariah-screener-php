@@ -5,6 +5,8 @@ $siteTitle = 'Shaikhoology Screener';
 $pageTitle = isset($title) && $title !== '' ? $title . ' · ' . $siteTitle : $siteTitle;
 $env = $_ENV['APP_ENV'] ?? 'development';
 $role = $_SESSION['role'] ?? 'guest';
+$user = $_SESSION['user'] ?? null;
+$userName = $user['name'] ?? 'Guest';
 $csrf = $_SESSION['csrf'] ?? '';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 ?>
@@ -54,11 +56,19 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
             <?php include __DIR__ . '/partials/nav.php'; ?>
         </nav>
         <div class="mt-auto border-t border-surface-200 px-6 py-5 text-xs text-surface-500 dark:border-surface-800">
-            <p>Signed in as <strong><?php echo htmlspecialchars(ucfirst($role)); ?></strong></p>
-            <p class="mt-2 flex flex-wrap items-center gap-2">
-                <button class="rounded-full border border-surface-300 px-3 py-1 text-xs font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800" x-on:click="$dispatch('open-modal', 'command-palette')">Command Palette</button>
-                <button class="rounded-full border border-surface-300 px-3 py-1 text-xs font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800" x-on:click="toggleTheme()">Toggle Theme</button>
-            </p>
+            <?php if ($role === 'guest'): ?>
+                <p>Aap guest mode me dekh rahe hain.</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <a href="/login" class="inline-flex items-center rounded-full border border-surface-300 px-3 py-1 font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800">Login</a>
+                    <a href="/register" class="inline-flex items-center rounded-full border border-surface-300 px-3 py-1 font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800">Register</a>
+                </div>
+            <?php else: ?>
+                <p>Signed in as <strong><?php echo htmlspecialchars($userName); ?></strong> · <?php echo htmlspecialchars(ucfirst($role)); ?></p>
+                <p class="mt-2 flex flex-wrap items-center gap-2">
+                    <button class="rounded-full border border-surface-300 px-3 py-1 text-xs font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800" x-on:click="$dispatch('open-modal', 'command-palette')">Command Palette</button>
+                    <button class="rounded-full border border-surface-300 px-3 py-1 text-xs font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800" x-on:click="toggleTheme()">Toggle Theme</button>
+                </p>
+            <?php endif; ?>
         </div>
     </aside>
 
@@ -80,23 +90,31 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
                     <span x-show="theme === 'dark'">Light</span>
                     <span x-show="theme !== 'dark'">Dark</span>
                 </button>
-                <div class="relative" x-data="{open:false}" x-on:click.outside="open=false">
-                    <button class="flex items-center gap-2 rounded-full bg-surface-100 px-3 py-2 text-sm font-semibold hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700" x-on:click="open=!open">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-white font-semibold">
-                            <?php echo strtoupper(substr($role, 0, 1)); ?>
-                        </span>
-                        <span class="hidden sm:block text-surface-700 dark:text-surface-100"><?php echo htmlspecialchars(ucfirst($role)); ?></span>
-                    </button>
-                    <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 rounded-2xl border border-surface-200 bg-white p-2 text-sm shadow-lg dark:border-surface-700 dark:bg-surface-900">
-                        <a href="/profile" class="block rounded-xl px-3 py-2 text-surface-600 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800">Profile</a>
-                        <a href="/settings" class="block rounded-xl px-3 py-2 text-surface-600 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800">Settings</a>
-                        <hr class="my-2 border-surface-200 dark:border-surface-700">
-                        <form action="/logout" method="post">
-                            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf); ?>">
-                            <button class="w-full rounded-xl px-3 py-2 text-left text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10">Sign out</button>
-                        </form>
+                <?php if ($role === 'guest'): ?>
+                    <div class="flex items-center gap-2">
+                        <a href="/login" class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">Sign in</a>
+                        <a href="/register" class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-surface-600 hover:bg-surface-200 dark:text-surface-100 dark:hover:bg-surface-800">Register</a>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div class="relative" x-data="{open:false}" x-on:click.outside="open=false">
+                        <button class="flex items-center gap-2 rounded-full bg-surface-100 px-3 py-2 text-sm font-semibold hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700" x-on:click="open=!open">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-white font-semibold">
+                                <?php echo strtoupper(substr($userName, 0, 1)); ?>
+                            </span>
+            <span class="hidden sm:block text-surface-700 dark:text-surface-100"><?php echo htmlspecialchars($userName); ?></span>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-56 rounded-2xl border border-surface-200 bg-white p-2 text-sm shadow-lg dark:border-surface-700 dark:bg-surface-900">
+                            <div class="rounded-xl px-3 py-2 text-xs uppercase tracking-wide text-surface-400 dark:text-surface-500"><?php echo htmlspecialchars(ucfirst($role)); ?></div>
+                            <a href="/profile" class="block rounded-xl px-3 py-2 text-surface-600 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800">Profile</a>
+                            <a href="/settings" class="block rounded-xl px-3 py-2 text-surface-600 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800">Settings</a>
+                            <hr class="my-2 border-surface-200 dark:border-surface-700">
+                            <form action="/logout" method="post">
+                                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf); ?>">
+                                <button class="w-full rounded-xl px-3 py-2 text-left text-rose-600 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </header>
 

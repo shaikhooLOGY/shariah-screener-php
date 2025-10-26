@@ -61,7 +61,7 @@ $superSection = [
     ],
 ];
 
-if (in_array($role, ['guest', 'user'], true)) {
+if ($role === 'guest') {
     $sections['Account'] = $authLinks;
 }
 

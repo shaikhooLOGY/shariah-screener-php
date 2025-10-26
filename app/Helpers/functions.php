@@ -28,6 +28,14 @@ function db_pdo(): \PDO {
     return $pdo;
 }
 
+function auth_user(): ?array {
+    return $_SESSION['user'] ?? null;
+}
+
+function auth_role(): string {
+    return $_SESSION['role'] ?? 'guest';
+}
+
 function abilities_config(): array {
     static $config = null;
     if ($config === null) {
@@ -52,7 +60,7 @@ function role_hierarchy(): array {
 }
 
 function current_role(): string {
-    return $_SESSION['role'] ?? 'guest';
+    return auth_role();
 }
 
 function role_index(string $role): int {
@@ -86,6 +94,26 @@ function role_abilities(string $role): array {
 function can(string $ability): bool {
     $abilities = role_abilities(current_role());
     return in_array('*', $abilities, true) || in_array($ability, $abilities, true);
+}
+
+function set_flash(string $tone, string $message): void {
+    $_SESSION['flash'][$tone] = $message;
+}
+
+function take_flash(): array {
+    $flash = $_SESSION['flash'] ?? [];
+    unset($_SESSION['flash']);
+    return $flash;
+}
+
+function redirect_for_role(string $role): string {
+    return match ($role) {
+        'superadmin' => '/dashboard/superadmin/system',
+        'admin' => '/dashboard/admin',
+        'mufti' => '/dashboard/ulama',
+        'user' => '/',
+        default => '/',
+    };
 }
 
 function audit_log(?int $actorId, string $action, string $entity, string $entityId, array $meta = []): void {

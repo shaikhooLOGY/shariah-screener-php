@@ -6,6 +6,8 @@ use PDO;
 use function resolve_dsn;
 use function role_at_least;
 use function audit_log;
+use function set_flash;
+use function take_flash;
 
 abstract class BaseController extends Controller
 {
@@ -32,14 +34,12 @@ abstract class BaseController extends Controller
 
     protected function takeFlash(): array
     {
-        $flash = $_SESSION['flash'] ?? [];
-        unset($_SESSION['flash']);
-        return $flash;
+        return take_flash();
     }
 
     protected function flash(string $tone, string $message): void
     {
-        $_SESSION['flash'][$tone] = $message;
+        set_flash($tone, $message);
     }
 
     protected function redirect(string $url): void

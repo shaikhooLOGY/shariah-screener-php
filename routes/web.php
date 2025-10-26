@@ -6,6 +6,7 @@ use App\Controllers\CompanyController;
 use App\Controllers\CompanyDiscussionController;
 use App\Controllers\CompanySuggestController;
 use App\Controllers\HealthController;
+use App\Controllers\AuthController;
 use App\Controllers\Superadmin\UsersController as SAUsersController;
 use App\Controllers\Superadmin\EngineController as SAEngineController;
 use App\Controllers\Superadmin\BucketsController as SABucketsController;
@@ -43,18 +44,25 @@ route('GET', '/company/{symbol}/suggest', [CompanySuggestController::class, 'for
 route('POST', '/company/{symbol}/suggest', [CompanySuggestController::class, 'submit']);
 
 // Auth
-route('GET', '/login', [GenericPageController::class, 'login']);
+route('GET', '/login', [AuthController::class, 'show']);
+route('POST', '/login', [AuthController::class, 'login']);
+route('POST', '/logout', [AuthController::class, 'logout']);
 route('GET', '/register', [GenericPageController::class, 'register']);
 route('GET', '/forgot', [GenericPageController::class, 'forgot']);
 
 // Dashboards
-route('GET', '/dashboard/ulama', [GenericPageController::class, 'ulamaDashboard']);
-route('GET', '/dashboard/ulama/reviews', [GenericPageController::class, 'ulamaReviews']);
-route('GET', '/dashboard/admin', [GenericPageController::class, 'adminDashboard']);
-route('GET', '/dashboard/admin/companies', [GenericPageController::class, 'adminCompanies']);
-route('GET', '/dashboard/admin/filings', [GenericPageController::class, 'adminFilings']);
-route('GET', '/dashboard/admin/users', [GenericPageController::class, 'adminUsers']);
-route('GET', '/dashboard/admin/settings', [GenericPageController::class, 'adminSettings']);
+guard('mufti', function () {
+    route('GET', '/dashboard/ulama', [GenericPageController::class, 'ulamaDashboard']);
+    route('GET', '/dashboard/ulama/reviews', [GenericPageController::class, 'ulamaReviews']);
+});
+
+guard('admin', function () {
+    route('GET', '/dashboard/admin', [GenericPageController::class, 'adminDashboard']);
+    route('GET', '/dashboard/admin/companies', [GenericPageController::class, 'adminCompanies']);
+    route('GET', '/dashboard/admin/filings', [GenericPageController::class, 'adminFilings']);
+    route('GET', '/dashboard/admin/users', [GenericPageController::class, 'adminUsers']);
+    route('GET', '/dashboard/admin/settings', [GenericPageController::class, 'adminSettings']);
+});
 
 // Health checks
 route('GET', '/health', [HealthController::class, 'index']);

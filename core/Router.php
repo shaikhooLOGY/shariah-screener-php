@@ -36,10 +36,26 @@ class Router {
                     $guardRole = $definition['guard'] ?? null;
                 }
 
-                if ($guardRole && (!function_exists('role_at_least') || !\role_at_least($guardRole))) {
-                    http_response_code(403);
-                    echo '403 Forbidden';
-                    return;
+                if ($guardRole) {
+                    $roleOk = function_exists('role_at_least') ? \role_at_least($guardRole) : false;
+                    if (!$roleOk) {
+                        $isGuest = function_exists('auth_role') ? \auth_role() === 'guest' : empty($_SESSION['role']);
+                        if ($isGuest) {
+                            if (!empty($uri)) {
+                                $_SESSION['intended'] = $uri;
+                            }
+                            header('Location: /login');
+                            exit;
+                        }
+                        http_response_code(403);
+                        $view = dirname(__DIR__) . '/app/Views/pages/403.php';
+                        if (is_file($view)) {
+                            include $view;
+                        } else {
+                            echo '403 Forbidden';
+                        }
+                        return;
+                    }
                 }
 
                 if (is_array($handler)) {
