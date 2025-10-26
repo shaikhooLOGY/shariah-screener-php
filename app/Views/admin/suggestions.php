@@ -1,0 +1,1 @@
+<h1>Suggestions Queue</h1>
