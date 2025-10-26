@@ -20,7 +20,7 @@ class CompanyController extends Controller
         return $cfg['caps'];
     }
 
-    public function profile($symbol)
+    public function show($symbol)
     {
         $pdo = $this->pdo();
 
@@ -52,5 +52,10 @@ class CompanyController extends Controller
         }
 
         $this->view('company/profile', compact('symbol','company','filing','ratios','verdict') + ['caps'=>$this->caps(), 'why'=>$why]);
+    }
+
+    public function profile($symbol)
+    {
+        $this->show($symbol);
     }
 }

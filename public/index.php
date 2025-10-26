@@ -1,22 +1,19 @@
 <?php
 declare(strict_types=1);
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+$ROOT = dirname(__DIR__);
+
+// boot
+require $ROOT . '/core/Bootstrap.php';
+require $ROOT . '/core/Router.php';   // <-- must be loaded before routes
 
 use Core\Bootstrap;
 use Core\Router;
-use Core\ErrorHandler;
 
-ErrorHandler::register();
-$bootstrap = new Bootstrap();
-$bootstrap->init();
+Bootstrap::init($ROOT);
 
-header('X-Frame-Options: SAMEORIGIN');
-header('X-Content-Type-Options: nosniff');
+// routes
+require $ROOT . '/routes/web.php';
 
-$router = new Router();
-require dirname(__DIR__) . '/routes/web.php';
-require dirname(__DIR__) . '/routes/admin.php';
-require dirname(__DIR__) . '/routes/superadmin.php';
-require dirname(__DIR__) . '/routes/mufti.php';
-
-$router->dispatch();
+// dispatch
+Router::dispatch();

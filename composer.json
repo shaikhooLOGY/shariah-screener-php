@@ -24,6 +24,8 @@
   "scripts": {
     "serve": "php -S localhost:8000 -t public",
     "seed:sqlite": "php scripts/dev_seed_sqlite.php",
-    "seed:mysql": "php scripts/dev_seed_mysql.php localhost shaikhoology root secret"
+    "seed:mysql": "php scripts/dev_seed_mysql.php localhost shaikhoology root secret",
+    "serve:local": "php -S 127.0.0.1:8081 -t public",
+    "smoke": "php scripts/dev_smoketest.php"
   }
 }
