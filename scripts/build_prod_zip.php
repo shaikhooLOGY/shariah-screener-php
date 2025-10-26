@@ -39,12 +39,14 @@ $include = [
     'database',
     'scripts',
     'vendor',
+    'storage',
     '.htaccess',
     '.env.production.example',
     'RUNBOOK_HOSTINGER.md',
+    'prod_health_direct.php',
 ];
 
-$excludeFragments = ['/.git/', '/tests/', '/node_modules/', '/dist/', '.DS_Store'];
+$excludeFragments = ['/.git/', '/tests/', '/node_modules/', '/dist/', '.DS_Store', '/storage/shaikhoology.sqlite'];
 $rootLength = strlen($root) + 1;
 
 $addPath = function (string $path) use ($zip, $root, $excludeFragments, $rootLength): void {

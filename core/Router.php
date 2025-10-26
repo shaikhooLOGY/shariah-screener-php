@@ -26,7 +26,22 @@ class Router {
             case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
                 http_response_code(405); echo '405 Method Not Allowed'; return;
             default:
-                $handler = $routeInfo[1]; $vars = $routeInfo[2];
+                $definition = $routeInfo[1];
+                $vars = $routeInfo[2];
+
+                $guardRole = null;
+                $handler = $definition;
+                if (is_array($definition) && array_key_exists('callable', $definition)) {
+                    $handler = $definition['callable'];
+                    $guardRole = $definition['guard'] ?? null;
+                }
+
+                if ($guardRole && (!function_exists('role_at_least') || !\role_at_least($guardRole))) {
+                    http_response_code(403);
+                    echo '403 Forbidden';
+                    return;
+                }
+
                 if (is_array($handler)) {
                     $instance = new $handler[0]();
                     call_user_func_array([$instance, $handler[1]], array_values($vars));
@@ -37,9 +52,29 @@ class Router {
     }
 }
 
-class RouterRegistry { public static array $routes = []; }
+class RouterRegistry {
+    public static array $routes = [];
+    public static ?string $currentGuardRole = null;
+}
 
 /** Register a route (helper) */
 function route($method, $path, $handler) {
-    RouterRegistry::$routes[] = [strtoupper($method), $path, $handler];
+    $definition = [
+        'callable' => $handler,
+        'guard' => RouterRegistry::$currentGuardRole,
+    ];
+    RouterRegistry::$routes[] = [strtoupper($method), $path, $definition];
+}
+
+function guard(?string $role, ?callable $callback = null): void {
+    $previous = RouterRegistry::$currentGuardRole;
+    RouterRegistry::$currentGuardRole = $role;
+    if ($callback) {
+        $callback();
+        RouterRegistry::$currentGuardRole = $previous;
+    }
+}
+
+function dispatch(): void {
+    Router::dispatch();
 }

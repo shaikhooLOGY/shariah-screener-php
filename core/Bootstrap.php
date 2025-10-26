@@ -3,8 +3,11 @@ namespace Core;
 
 class Bootstrap {
     public static function init(string $root): void {
+        $_ENV['APP_ROOT'] = $root;
+
         // Composer autoload
         require $root . '/vendor/autoload.php';
+        require_once $root . '/app/Helpers/functions.php';
 
         // Load .env (simple parser, skip comments/blanks)
         $envFile = $root.'/.env';

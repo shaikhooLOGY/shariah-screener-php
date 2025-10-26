@@ -1,10 +1,16 @@
 <?php
 use function Core\route;
+use function Core\guard;
 use App\Controllers\GenericPageController;
 use App\Controllers\CompanyController;
 use App\Controllers\CompanyDiscussionController;
 use App\Controllers\CompanySuggestController;
 use App\Controllers\HealthController;
+use App\Controllers\Superadmin\UsersController as SAUsersController;
+use App\Controllers\Superadmin\EngineController as SAEngineController;
+use App\Controllers\Superadmin\BucketsController as SABucketsController;
+use App\Controllers\Superadmin\SystemController as SASystemController;
+use App\Controllers\Superadmin\AuditController as SAAuditController;
 
 // Public pages
 route('GET', '/', [GenericPageController::class, 'home']);
@@ -53,3 +59,24 @@ route('GET', '/dashboard/admin/settings', [GenericPageController::class, 'adminS
 // Health checks
 route('GET', '/health', [HealthController::class, 'index']);
 route('GET', '/prod-health', [HealthController::class, 'index']);
+
+guard('superadmin', function () {
+    route('GET', '/dashboard/superadmin', [SASystemController::class, 'index']);
+    route('GET', '/dashboard/superadmin/users', [SAUsersController::class, 'index']);
+    route('POST', '/sa/users/{id}/role', [SAUsersController::class, 'updateRole']);
+    route('POST', '/sa/users/{id}/status', [SAUsersController::class, 'updateStatus']);
+    route('POST', '/sa/users/bulk-role', [SAUsersController::class, 'bulkRole']);
+
+    route('GET', '/dashboard/superadmin/engine', [SAEngineController::class, 'index']);
+    route('POST', '/sa/engine/run', [SAEngineController::class, 'run']);
+
+    route('GET', '/dashboard/superadmin/buckets', [SABucketsController::class, 'index']);
+    route('POST', '/sa/buckets/{companyId}/move', [SABucketsController::class, 'move']);
+    route('GET', '/sa/buckets/export', [SABucketsController::class, 'exportCsv']);
+
+    route('GET', '/dashboard/superadmin/system', [SASystemController::class, 'system']);
+    route('POST', '/sa/flags/{key}', [SASystemController::class, 'toggleFlag']);
+
+    route('GET', '/dashboard/superadmin/audit', [SAAuditController::class, 'index']);
+    route('GET', '/sa/audit/export', [SAAuditController::class, 'exportCsv']);
+});

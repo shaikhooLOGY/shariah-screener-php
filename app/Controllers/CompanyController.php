@@ -4,6 +4,7 @@ namespace App\Controllers;
 use Core\Controller;
 use App\Services\ScreeningEngine;
 use PDO;
+use function resolve_dsn;
 
 class CompanyController extends Controller
 {
@@ -11,6 +12,7 @@ class CompanyController extends Controller
         $dsn  = $_ENV['DB_DSN']  ?? 'sqlite:./storage/shaikhoology.sqlite';
         $user = $_ENV['DB_USER'] ?? '';
         $pass = $_ENV['DB_PASS'] ?? '';
+        $dsn = resolve_dsn($dsn);
         return new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     }
 

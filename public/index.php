@@ -1,19 +1,12 @@
 <?php
 declare(strict_types=1);
 
-$ROOT = dirname(__DIR__);
+$root = __DIR__ . '/..'; // because local dev serves from /public
+require $root.'/core/Bootstrap.php';
+Core\Bootstrap::init($root);
 
-// boot
-require $ROOT . '/core/Bootstrap.php';
-require $ROOT . '/core/Router.php';   // <-- must be loaded before routes
+require $root.'/core/Router.php';
+require $root.'/routes/web.php';
 
-use Core\Bootstrap;
-use Core\Router;
-
-Bootstrap::init($ROOT);
-
-// routes
-require $ROOT . '/routes/web.php';
-
-// dispatch
-Router::dispatch();
+// Important: Router is namespaced Core
+\Core\dispatch();

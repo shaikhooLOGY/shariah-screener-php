@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use PDO;
+use function resolve_dsn;
 
 class HealthController {
     public function index() {
@@ -12,6 +13,7 @@ class HealthController {
             $user = $_ENV['DB_USER'] ?? '';
             $pass = $_ENV['DB_PASS'] ?? '';
             if ($dsn) {
+                $dsn = resolve_dsn($dsn);
                 $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
                 $pdo->query('SELECT 1');
                 $out['db'] = 'ok';
