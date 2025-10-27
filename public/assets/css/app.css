@@ -16,6 +16,13 @@
   --amber: #f59e0b;
   --rose: #ef4444;
   --ring: rgba(99,102,241,0.35);
+
+  /* Skin variables */
+  --brand-bg: #ffffff;
+  --brand-fg: #0f172a;
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --chip-bg: rgba(99,102,241,0.12);
+  --accent: #6366f1;
 }
 
 .dark {
@@ -36,6 +43,21 @@
 
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+/* A11y improvements */
+button, a, input, select, textarea {
+  min-height: 40px;
+  min-width: 40px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-indigo);
+  outline-offset: 2px;
 }
 
 body {
@@ -123,25 +145,49 @@ a:hover {
 }
 
 /* Skin-specific styling */
-.skin-gandfade .glass-card {
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-  border: 1px solid rgba(139, 92, 246, 0.2);
+[data-skin="classic"] {
+  --brand-bg: #ffffff;
+  --brand-fg: #0f172a;
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --chip-bg: rgba(99,102,241,0.12);
+  --accent: #6366f1;
 }
 
-.skin-auroraglass .glass-card {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.05));
-  border: 1px solid rgba(6, 182, 212, 0.3);
+[data-skin="aurora"] {
+  --brand-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --brand-fg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.2);
+  --chip-bg: rgba(6,182,212,0.15);
+  --accent: #06b6d4;
 }
 
-.skin-neutralpro .glass-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+[data-skin="noor"] {
+  --brand-bg: #1a1a1a;
+  --brand-fg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --chip-bg: rgba(139,92,246,0.15);
+  --accent: #8b5cf6;
 }
 
-.dark .skin-neutralpro .glass-card {
-  background: #1e2937;
-  border: 1px solid #334155;
+[data-skin="aurora"] .glass-card {
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+[data-skin="aurora"] button {
+  border-radius: 999px;
+}
+
+[data-skin="noor"] .glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+}
+
+[data-skin="noor"] h1, [data-skin="noor"] h2, [data-skin="noor"] h3 {
+  font-family: 'Georgia', serif;
+  font-weight: 600;
 }
 
 #app-toasts .toast-enter {

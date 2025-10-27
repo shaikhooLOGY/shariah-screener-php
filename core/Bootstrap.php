@@ -30,5 +30,8 @@ class Bootstrap {
         }
 
         ErrorHandler::register();
+
+        // Performance timing
+        $_ENV['REQUEST_START'] = microtime(true);
     }
 }

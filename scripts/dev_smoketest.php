@@ -4,6 +4,18 @@ declare(strict_types=1);
 $port = getenv('APP_DEV_PORT') ?: '8081';
 $base = rtrim(getenv('APP_URL') ?: "http://127.0.0.1:{$port}", '/');
 $phpBinary = PHP_BINARY;
+
+// Clear cache if requested
+if (getenv('CACHE_CLEAR') === '1') {
+    $cacheDir = __DIR__ . '/../storage/cache';
+    if (is_dir($cacheDir)) {
+        $files = glob($cacheDir . '/*.cache');
+        foreach ($files as $file) {
+            unlink($file);
+        }
+        echo "Cache cleared.\n";
+    }
+}
 $docRoot = __DIR__ . '/../public';
 
 $serverCmd = sprintf('%s -S 127.0.0.1:%s -t %s', escapeshellarg($phpBinary), $port, escapeshellarg($docRoot));

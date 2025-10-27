@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use Core\Controller;
 use App\Services\ScreeningEngine;
+use App\Middleware\RateLimitGuard;
 use PDO;
 
 class CompanySuggestController extends Controller
@@ -60,6 +61,15 @@ class CompanySuggestController extends Controller
         if (!$user || !isset($user['id'])) {
             http_response_code(401);
             echo json_encode(['error' => 'Authentication required']);
+            return;
+        }
+
+        // Rate limiting: 10 requests per minute per IP
+        $rateLimit = new RateLimitGuard();
+        $clientIP = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        if (!$rateLimit->check("suggest_ratio_{$clientIP}", 10, 60)) {
+            http_response_code(429);
+            echo json_encode(['error' => 'Too many requests. Please try again later.']);
             return;
         }
 
