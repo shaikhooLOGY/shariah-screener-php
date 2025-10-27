@@ -48,11 +48,11 @@ class AuthController extends Controller
         }
 
         $pdo = db_pdo();
-        $stmt = $pdo->prepare('SELECT id, name, email, password, role, active FROM users WHERE LOWER(email) = :email LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, name, email, password_hash, role, active FROM users WHERE LOWER(email) = :email LIMIT 1');
         $stmt->execute([':email' => $email]);
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$user || !$user['active'] || !password_verify($password, $user['password'])) {
+        if (!$user || !$user['active'] || !password_verify($password, $user['password_hash'])) {
             set_flash('danger', 'Galat credentials ya inactive account.');
             $this->redirect('/login');
             return;

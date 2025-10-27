@@ -39,6 +39,9 @@ $ulamaSection = [
     'Ulama' => [
         ['href' => '/dashboard/ulama', 'label' => 'Dashboard'],
         ['href' => '/dashboard/ulama/reviews', 'label' => 'Reviews'],
+        ['href' => '/dashboard/ulama/tasks', 'label' => 'Tasks', 'ability' => 'activity.update'],
+        ['href' => '/dashboard/ulama/suggestions', 'label' => 'Suggestions', 'ability' => 'ratios.review_suggestion'],
+        ['href' => '/dashboard/ulama/controversies', 'label' => 'Controversies', 'ability' => 'controversy.vote'],
     ],
 ];
 
@@ -49,6 +52,8 @@ $adminSection = [
         ['href' => '/dashboard/admin/filings', 'label' => 'Filings'],
         ['href' => '/dashboard/admin/users', 'label' => 'Users'],
         ['href' => '/dashboard/admin/settings', 'label' => 'Settings'],
+        ['href' => '/dashboard/admin/tasks', 'label' => 'Tasks', 'ability' => 'task.assign_mufti'],
+        ['href' => '/dashboard/admin/suggestions', 'label' => 'Suggestions', 'ability' => 'ratios.review_suggestion'],
     ],
 ];
 
@@ -59,6 +64,9 @@ $superSection = [
         ['href' => '/dashboard/superadmin/engine', 'label' => 'Engine'],
         ['href' => '/dashboard/superadmin/audit', 'label' => 'Audit Log'],
         ['href' => '/dashboard/superadmin/system', 'label' => 'System'],
+        ['href' => '/dashboard/superadmin/cmv', 'label' => 'CMV', 'ability' => 'cmv.view_diff'],
+        ['href' => '/dashboard/superadmin/controversies', 'label' => 'Controversies', 'ability' => 'controversy.finalize'],
+        ['href' => '/dashboard/superadmin/sectors', 'label' => 'Sectors', 'ability' => 'sector_caps.edit'],
         ['href' => '/dashboard/superadmin/approvals', 'label' => 'Approvals', 'ability' => 'role.approve_request'],
     ],
 ];

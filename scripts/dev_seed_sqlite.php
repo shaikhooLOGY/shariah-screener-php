@@ -9,7 +9,7 @@ $pdo->exec('PRAGMA foreign_keys = ON;');
 $pdo->exec("
 CREATE TABLE IF NOT EXISTS companies (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  isin TEXT,
+  isin TEXT UNIQUE,
   ticker TEXT UNIQUE,
   name TEXT NOT NULL,
   sector_code TEXT,

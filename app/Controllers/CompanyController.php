@@ -31,11 +31,45 @@ class CompanyController extends Controller
         $company = $c->fetch(PDO::FETCH_ASSOC);
 
         $filing = null; $ratios = null; $verdict = null; $why = []; $cmvInfo = null; $history = [];
+        $sectorInfo = null; $pendingSuggestionsCount = 0; $openControversiesCount = 0;
+
+        // Get current user from session
+        $currentUser = $_SESSION['user'] ?? null;
 
         if ($company) {
             $f = $pdo->prepare("SELECT * FROM filings WHERE company_id = :cid ORDER BY period DESC LIMIT 1");
             $f->execute([':cid' => $company['id']]);
             $filing = $f->fetch(PDO::FETCH_ASSOC);
+
+            // Get sector information
+            $stmt = $pdo->prepare("
+                SELECT s.name, s.is_compliant, s.rationale
+                FROM company_sector_map csm
+                JOIN sectors s ON s.id = csm.sector_id
+                WHERE csm.company_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$company['id']]);
+            $sector = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($sector) {
+                $sectorInfo = [
+                    'name' => $sector['name'],
+                    'is_compliant' => (bool)$sector['is_compliant'],
+                    'rationale' => $sector['rationale']
+                ];
+            }
+
+            // Get pending suggestions count (if user is logged in)
+            if ($currentUser) {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM ratio_suggestions WHERE company_id = ? AND status = 'pending'");
+                $stmt->execute([$company['id']]);
+                $pendingSuggestionsCount = (int)$stmt->fetchColumn();
+
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM controversy_queue WHERE company_id = ? AND status = 'open'");
+                $stmt->execute([$company['id']]);
+                $openControversiesCount = (int)$stmt->fetchColumn();
+            }
 
             // Get published CMV result
             $stmt = $pdo->prepare("
@@ -58,7 +92,11 @@ class CompanyController extends Controller
                 ];
                 $verdict = ucfirst($cmvResult['verdict']);
             } else {
-                // Fallback to old engine if no CMV
+                // No published CMV yet - show graceful empty state
+                $verdict = 'No published CMV yet';
+                $cmvInfo = null;
+
+                // Still show legacy engine results if filing exists
                 if ($filing) {
                     $engine = new ScreeningEngine();
                     $ratios = $engine->compute($filing);
@@ -71,7 +109,11 @@ class CompanyController extends Controller
                     if ($ratios['liquid_pct'] < $caps['liquid']) { $pass = false; $why[] = 'Liquid assets below cap'; }
                     if ($ratios['nonsh_pct'] > $caps['nonsh']) { $pass = false; $why[] = 'Non-Shari\'ah income exceeds cap'; }
 
-                    $verdict = $pass ? 'Pass (Legacy)' : 'Fail (Legacy)';
+                    if ($pass) {
+                        $verdict = 'Pass (Legacy - No CMV)';
+                    } else {
+                        $verdict = 'Fail (Legacy - No CMV)';
+                    }
                 }
             }
 
@@ -88,7 +130,7 @@ class CompanyController extends Controller
             $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        $this->view('company/profile', compact('symbol','company','filing','ratios','verdict','cmvInfo','history') + ['caps'=>$this->caps(), 'why'=>$why]);
+        $this->view('company/profile', compact('symbol','company','filing','ratios','verdict','cmvInfo','history','sectorInfo','pendingSuggestionsCount','openControversiesCount') + ['caps'=>$this->caps(), 'why'=>$why]);
     }
 
     public function profile($symbol)

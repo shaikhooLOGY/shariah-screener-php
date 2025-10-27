@@ -53,4 +53,63 @@ class CompanySuggestController extends Controller
 
         header('Location: /company/'.$symbol.'/suggest?ok=1');
     }
+
+    public function submitRatioSuggestion(): void
+    {
+        $user = $_SESSION['user'] ?? null;
+        if (!$user || !isset($user['id'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Authentication required']);
+            return;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $companyId = (int)($input['company_id'] ?? 0);
+        $period = trim($input['period'] ?? '');
+        $ratios = $input['ratios'] ?? [];
+        $evidenceUrl = trim($input['evidence_url'] ?? '');
+
+        if (!$companyId || !$period || empty($ratios)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required fields']);
+            return;
+        }
+
+        $pdo = $this->pdo();
+
+        // Verify company exists
+        $stmt = $pdo->prepare("SELECT id FROM companies WHERE id = ?");
+        $stmt->execute([$companyId]);
+        if (!$stmt->fetch()) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Company not found']);
+            return;
+        }
+
+        // Insert ratio suggestion
+        $stmt = $pdo->prepare("
+            INSERT INTO ratio_suggestions (company_id, suggested_by, period, payload_json, source, screener_link, status)
+            VALUES (?, ?, ?, ?, 'user', ?, 'pending')
+        ");
+        $stmt->execute([
+            $companyId,
+            $user['id'],
+            $period,
+            json_encode($ratios),
+            $evidenceUrl
+        ]);
+
+        $suggestionId = $pdo->lastInsertId();
+
+        // Audit log
+        if (function_exists('audit_log')) {
+            audit_log($user['id'], 'suggestion.create', 'ratio_suggestions', $suggestionId, [
+                'company_id' => $companyId,
+                'period' => $period,
+                'ratio_count' => count($ratios)
+            ]);
+        }
+
+        echo json_encode(['success' => true, 'suggestion_id' => $suggestionId]);
+    }
 }

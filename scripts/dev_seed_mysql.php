@@ -242,4 +242,48 @@ if ($cmvDraftId) {
     $pdo->exec("INSERT IGNORE INTO cmv_diffs (cmv_id, stats_json) VALUES ({$cmvDraftId}, '{\"moved\":{\"compliant_to_grey\":1},\"by_sector\":{\"IT\":\"+1G\"},\"counts\":{\"compliant\":0,\"grey\":1,\"noncompliant\":0}}');");
 }
 
+// Seed users with hashed passwords
+$secretHash = password_hash('secret', PASSWORD_DEFAULT);
+$pdo->exec("INSERT IGNORE INTO users (name, email, password_hash, role, active) VALUES
+('Shaikh Super', 'super@shaikhoology.test', '{$secretHash}', 'superadmin', 1),
+('Admin User', 'admin@shaikhoology.test', '{$secretHash}', 'admin', 1),
+('Mufti Expert', 'mufti@shaikhoology.test', '{$secretHash}', 'mufti', 1),
+('Regular User', 'user@shaikhoology.test', '{$secretHash}', 'user', 1);");
+
+// Seed sectors
+$pdo->exec("INSERT IGNORE INTO sectors (name, is_compliant, rationale, updated_by) VALUES
+('Information Technology', 1, 'Generally compliant sector with low Shari\'ah concerns', 1),
+('Healthcare', 1, 'Essential services, generally compliant', 1),
+('Financial Services', 0, 'Interest-based activities make this sector non-compliant', 1),
+('Energy', 1, 'Oil & Gas sector with varying compliance levels', 1);");
+
+// Seed company sector mappings
+$itSectorId = (int)$pdo->query("SELECT id FROM sectors WHERE name='Information Technology' LIMIT 1")->fetchColumn();
+if ($itSectorId) {
+    $pdo->exec("INSERT IGNORE INTO company_sector_map (company_id, sector_id)
+    SELECT c.id, {$itSectorId} FROM companies c WHERE c.ticker='TCS' LIMIT 1;");
+}
+
+// Seed mufti profiles
+$muftiId = (int)$pdo->query("SELECT id FROM users WHERE role='mufti' LIMIT 1")->fetchColumn();
+if ($muftiId) {
+    $pdo->exec("INSERT IGNORE INTO mufti_profiles (user_id, expertise_sectors_json, bio) VALUES
+    ({$muftiId}, '[\"Information Technology\",\"Healthcare\"]', 'Experienced Islamic finance scholar specializing in technology and healthcare sectors.')");
+}
+
+// Seed sample tasks
+if ($muftiId) {
+    $pdo->exec("INSERT IGNORE INTO tasks (title, type, company_id, payload_json, priority, assignee_id, status, created_by)
+    SELECT 'Review TCS activity compliance', 'activity_review', c.id, '{\"focus\":\"business_activities\"}', 'high', {$muftiId}, 'open', 1
+    FROM companies c WHERE c.ticker='TCS' LIMIT 1;");
+}
+
+// Seed sample ratio suggestion
+$userId = (int)$pdo->query("SELECT id FROM users WHERE role='user' LIMIT 1")->fetchColumn();
+if ($userId) {
+    $pdo->exec("INSERT IGNORE INTO ratio_suggestions (company_id, suggested_by, period, payload_json, source, screener_link, status)
+    SELECT c.id, {$userId}, '2025-Q2', '{\"debt_pct\":0.23,\"interest_pct\":0.015}', 'user', 'https://example.com/source', 'pending'
+    FROM companies c WHERE c.ticker='TCS' LIMIT 1;");
+}
+
 echo "MySQL seed done.\n";
