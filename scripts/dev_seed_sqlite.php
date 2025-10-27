@@ -50,6 +50,34 @@ CREATE TABLE IF NOT EXISTS users (
 ");
 
 $pdo->exec("
+CREATE TABLE IF NOT EXISTS abilities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  key TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+");
+
+$pdo->exec("
+CREATE TABLE IF NOT EXISTS role_abilities (
+  role TEXT NOT NULL,
+  ability_key TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (role, ability_key)
+);
+");
+
+$pdo->exec("
+CREATE TABLE IF NOT EXISTS user_abilities (
+  user_id INTEGER NOT NULL,
+  ability_key TEXT NOT NULL,
+  assigned_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, ability_key),
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+");
+
+$pdo->exec("
 CREATE TABLE IF NOT EXISTS feature_flags (
   key TEXT PRIMARY KEY,
   value INTEGER NOT NULL DEFAULT 0,
@@ -95,6 +123,27 @@ CREATE TABLE IF NOT EXISTS screening_buckets (
 ");
 
 $pdo->exec("
+CREATE TABLE IF NOT EXISTS approvals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL,
+  entity TEXT NOT NULL,
+  entity_id INTEGER,
+  requested_by INTEGER NOT NULL,
+  approver_id INTEGER,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+  payload_json TEXT,
+  note TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  decided_at TEXT,
+  FOREIGN KEY(requested_by) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(approver_id) REFERENCES users(id) ON DELETE SET NULL
+);
+");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_approvals_status ON approvals(status);");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_role_abilities_role ON role_abilities(role);");
+$pdo->exec("CREATE INDEX IF NOT EXISTS idx_user_abilities_user ON user_abilities(user_id);");
+
+$pdo->exec("
 INSERT OR IGNORE INTO companies (isin, ticker, name, sector_code, country, description)
 VALUES ('INE467B01029','TCS','Tata Consultancy Services','IT','India','Seed row for local demo');
 ");
@@ -125,6 +174,79 @@ foreach ($users as [$name, $email, $role]) {
         ':password' => $hash,
         ':role' => $role,
     ]);
+}
+
+$abilities = [
+    'watchlist.*' => 'Access personal watchlists',
+    'discussion.post' => 'Post in company discussions',
+    'suggest.ratio' => 'Submit ratio suggestions',
+    'activity.update' => 'Update screening activities',
+    'activity.view_history' => 'View screening history',
+    'ratios.manual_fill' => 'Manually fill ratios',
+    'ratios.review_suggestion' => 'Review suggested ratios',
+    'controversy.vote' => 'Vote on controversies',
+    'sector_mapping.edit' => 'Edit sector mappings',
+    'task.assign_mufti' => 'Assign tasks to muftis',
+    'task.update' => 'Update screening tasks',
+    'user.ban' => 'Request user ban',
+    'user.unban' => 'Request user unban',
+    'role.request_mufti_add_remove' => 'Request mufti role changes',
+    'cmv.run' => 'Run compliance master validation',
+    'cmv.publish' => 'Publish compliance master version',
+    'cmv.rollback' => 'Rollback compliance master version',
+    'role.approve_request' => 'Approve privileged requests',
+    'sector_caps.edit' => 'Edit sector caps',
+    'cmv.view_diff' => 'View compliance diffs',
+    'controversy.finalize' => 'Finalize controversy verdict',
+];
+
+$abilityStmt = $pdo->prepare("INSERT OR IGNORE INTO abilities (key, label) VALUES (:key, :label)");
+foreach ($abilities as $key => $label) {
+    $abilityStmt->execute([':key' => $key, ':label' => $label]);
+}
+
+$userAbilities = ['watchlist.*', 'discussion.post', 'suggest.ratio'];
+$muftiAbilities = array_merge($userAbilities, [
+    'activity.update',
+    'activity.view_history',
+    'ratios.manual_fill',
+    'ratios.review_suggestion',
+    'controversy.vote',
+    'sector_mapping.edit',
+]);
+$adminAbilities = array_merge($userAbilities, [
+    'task.assign_mufti',
+    'task.update',
+    'user.ban',
+    'user.unban',
+    'role.request_mufti_add_remove',
+]);
+$superadminAbilities = array_values(array_unique(array_merge(
+    $muftiAbilities,
+    $adminAbilities,
+    [
+        'cmv.run',
+        'cmv.publish',
+        'cmv.rollback',
+        'role.approve_request',
+        'sector_caps.edit',
+        'cmv.view_diff',
+        'controversy.finalize',
+    ]
+)));
+
+$roleAbilities = [
+    'user' => $userAbilities,
+    'mufti' => array_values(array_unique($muftiAbilities)),
+    'admin' => array_values(array_unique($adminAbilities)),
+    'superadmin' => $superadminAbilities,
+];
+
+$roleAbilityStmt = $pdo->prepare("INSERT OR IGNORE INTO role_abilities (role, ability_key) VALUES (:role, :ability)");
+foreach ($roleAbilities as $role => $abilitiesList) {
+    foreach ($abilitiesList as $abilityKey) {
+        $roleAbilityStmt->execute([':role' => $role, ':ability' => $abilityKey]);
+    }
 }
 
 $flagStmt = $pdo->prepare("INSERT OR IGNORE INTO feature_flags (key, value, label) VALUES (:key, :value, :label)");

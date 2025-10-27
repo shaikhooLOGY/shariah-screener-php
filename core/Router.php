@@ -37,7 +37,7 @@ class Router {
                 }
 
                 if ($guardRole) {
-                    $roleOk = function_exists('role_at_least') ? \role_at_least($guardRole) : false;
+                    $roleOk = function_exists('role_at_least') ? \role_at_least(\current_user(), $guardRole) : false;
                     if (!$roleOk) {
                         $isGuest = function_exists('auth_role') ? \auth_role() === 'guest' : empty($_SESSION['role']);
                         if ($isGuest) {

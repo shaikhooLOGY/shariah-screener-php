@@ -9,6 +9,18 @@ $user = $_SESSION['user'] ?? null;
 $userName = $user['name'] ?? 'Guest';
 $csrf = $_SESSION['csrf'] ?? '';
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+// Get pending approvals count for superadmin badge
+$pendingApprovalsCount = 0;
+if ($role === 'superadmin' && function_exists('db_pdo')) {
+    try {
+        $pdo = db_pdo();
+        $stmt = $pdo->query("SELECT COUNT(*) FROM approvals WHERE status = 'pending'");
+        $pendingApprovalsCount = (int)$stmt->fetchColumn();
+    } catch (\Throwable $e) {
+        // Ignore errors
+    }
+}
 ?>
 <!doctype html>
 <html lang="en" class="h-full" x-data="themeDetector()" x-bind:class="theme">
@@ -86,6 +98,12 @@ $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
             </div>
             <div class="flex items-center gap-3">
                 <button class="rounded-full border border-surface-200 px-3 py-1 text-xs font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800 md:hidden" x-on:click="toggleCommandPalette(true)">Search</button>
+                <?php if ($role === 'superadmin' && $pendingApprovalsCount > 0): ?>
+                    <a href="/dashboard/superadmin/approvals" class="relative rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30">
+                        Approvals
+                        <span class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"><?php echo $pendingApprovalsCount; ?></span>
+                    </a>
+                <?php endif; ?>
                 <button class="rounded-full border border-surface-200 px-3 py-1 text-xs font-semibold hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800" x-on:click="toggleTheme()" aria-label="Toggle dark mode">
                     <span x-show="theme === 'dark'">Light</span>
                     <span x-show="theme !== 'dark'">Dark</span>

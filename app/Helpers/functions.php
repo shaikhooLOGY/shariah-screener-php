@@ -69,7 +69,7 @@ function role_index(string $role): int {
     return $index === false ? -1 : $index;
 }
 
-function role_at_least(string $roleRequired): bool {
+function role_at_least_current(string $roleRequired): bool {
     $currentIndex = role_index(current_role());
     $requiredIndex = role_index($roleRequired);
     return $currentIndex >= 0 && $requiredIndex >= 0 && $currentIndex >= $requiredIndex;
@@ -94,6 +94,69 @@ function role_abilities(string $role): array {
 function can(string $ability): bool {
     $abilities = role_abilities(current_role());
     return in_array('*', $abilities, true) || in_array($ability, $abilities, true);
+}
+
+function current_user(): ?array {
+    return auth_user();
+}
+
+function has_role(?array $user, string $role): bool {
+    if (!$user) return false;
+    return $user['role'] === $role;
+}
+
+function role_at_least(?array $user, string $minRole): bool {
+    if (!is_array($user) || !isset($user['role'])) return false;
+    $order = ['user' => 1, 'mufti' => 2, 'admin' => 3, 'superadmin' => 4];
+    $currentLevel = $order[$user['role']] ?? 0;
+    $requiredLevel = $order[$minRole] ?? 0;
+    return $currentLevel >= $requiredLevel;
+}
+
+function user_can(?array $user, string $abilityKey): bool {
+    if (!$user || !isset($user['role'])) return false;
+
+    // Check user-specific abilities first (overrides)
+    $pdo = db_pdo();
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM user_abilities WHERE user_id = ? AND ability_key = ?');
+    $stmt->execute([$user['id'], $abilityKey]);
+    if ($stmt->fetchColumn() > 0) {
+        return true;
+    }
+
+    // Check role abilities
+    $roleAbilities = role_abilities($user['role']);
+    return in_array('*', $roleAbilities, true) || in_array($abilityKey, $roleAbilities, true);
+}
+
+function guard(array $opts): void {
+    $user = current_user();
+    $minRole = $opts['minRole'] ?? null;
+    $abilities = $opts['abilities'] ?? [];
+
+    if ($minRole && !role_at_least($user, $minRole)) {
+        if ($user) {
+            http_response_code(403);
+            echo "Forbidden: Insufficient role";
+            exit;
+        } else {
+            header('Location: /login');
+            exit;
+        }
+    }
+
+    foreach ($abilities as $ability) {
+        if (!user_can($user, $ability)) {
+            if ($user) {
+                http_response_code(403);
+                echo "Forbidden: Missing ability '{$ability}'";
+                exit;
+            } else {
+                header('Location: /login');
+                exit;
+            }
+        }
+    }
 }
 
 function set_flash(string $tone, string $message): void {

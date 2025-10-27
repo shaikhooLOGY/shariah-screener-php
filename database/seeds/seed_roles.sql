@@ -1,1 +1,92 @@
--- TODO: seed basic roles
+-- Sprint 1: Seed abilities and role mappings
+
+-- Insert abilities
+INSERT OR IGNORE INTO abilities (key, label) VALUES
+('watchlist.add', 'Add companies to watchlist'),
+('watchlist.remove', 'Remove companies from watchlist'),
+('watchlist.view', 'View personal watchlist'),
+('discussion.post', 'Post in discussions'),
+('discussion.moderate', 'Moderate discussions'),
+('suggest.ratio', 'Suggest ratios for companies'),
+('activity.update', 'Update company activity status'),
+('activity.view_history', 'View activity history'),
+('ratios.manual_fill', 'Manually fill ratios'),
+('ratios.review_suggestion', 'Review ratio suggestions'),
+('controversy.vote', 'Vote on controversies'),
+('controversy.finalize', 'Finalize controversies'),
+('sector_mapping.edit', 'Edit sector mappings'),
+('task.assign_mufti', 'Assign tasks to muftis'),
+('task.update', 'Update task status'),
+('user.ban', 'Request user ban'),
+('user.unban', 'Unban users'),
+('role.request_mufti_add_remove', 'Request mufti role changes'),
+('cmv.run', 'Run CMV engine'),
+('cmv.publish', 'Publish CMV changes'),
+('cmv.rollback', 'Rollback CMV changes'),
+('role.approve_request', 'Approve role change requests'),
+('sector_caps.edit', 'Edit sector caps'),
+('cmv.view_diff', 'View CMV diffs');
+
+-- Role abilities mappings
+INSERT OR IGNORE INTO role_abilities (role, ability_key) VALUES
+-- user abilities
+('user', 'watchlist.add'),
+('user', 'watchlist.remove'),
+('user', 'watchlist.view'),
+('user', 'discussion.post'),
+('user', 'suggest.ratio'),
+
+-- mufti abilities
+('mufti', 'watchlist.add'),
+('mufti', 'watchlist.remove'),
+('mufti', 'watchlist.view'),
+('mufti', 'discussion.post'),
+('mufti', 'suggest.ratio'),
+('mufti', 'activity.update'),
+('mufti', 'activity.view_history'),
+('mufti', 'ratios.manual_fill'),
+('mufti', 'ratios.review_suggestion'),
+('mufti', 'controversy.vote'),
+('mufti', 'sector_mapping.edit'),
+
+-- admin abilities (inherits user + mufti + admin specific)
+('admin', 'watchlist.add'),
+('admin', 'watchlist.remove'),
+('admin', 'watchlist.view'),
+('admin', 'discussion.post'),
+('admin', 'suggest.ratio'),
+('admin', 'activity.update'),
+('admin', 'activity.view_history'),
+('admin', 'ratios.manual_fill'),
+('admin', 'ratios.review_suggestion'),
+('admin', 'controversy.vote'),
+('admin', 'sector_mapping.edit'),
+('admin', 'task.assign_mufti'),
+('admin', 'task.update'),
+('admin', 'user.ban'),
+('admin', 'user.unban'),
+('admin', 'role.request_mufti_add_remove'),
+
+-- superadmin abilities (all)
+('superadmin', 'watchlist.add'),
+('superadmin', 'watchlist.remove'),
+('superadmin', 'watchlist.view'),
+('superadmin', 'discussion.post'),
+('superadmin', 'suggest.ratio'),
+('superadmin', 'activity.update'),
+('superadmin', 'activity.view_history'),
+('superadmin', 'ratios.manual_fill'),
+('superadmin', 'ratios.review_suggestion'),
+('superadmin', 'controversy.vote'),
+('superadmin', 'sector_mapping.edit'),
+('superadmin', 'task.assign_mufti'),
+('superadmin', 'task.update'),
+('superadmin', 'user.ban'),
+('superadmin', 'user.unban'),
+('superadmin', 'role.request_mufti_add_remove'),
+('superadmin', 'cmv.run'),
+('superadmin', 'cmv.publish'),
+('superadmin', 'cmv.rollback'),
+('superadmin', 'role.approve_request'),
+('superadmin', 'sector_caps.edit'),
+('superadmin', 'cmv.view_diff');

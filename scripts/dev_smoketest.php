@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
-$base = rtrim(getenv('APP_URL') ?: 'http://127.0.0.1:8081', '/');
+$port = getenv('APP_DEV_PORT') ?: '8081';
+$base = rtrim(getenv('APP_URL') ?: "http://127.0.0.1:{$port}", '/');
 $phpBinary = PHP_BINARY;
 $docRoot = __DIR__ . '/../public';
 
-$serverCmd = sprintf('%s -S 127.0.0.1:8081 -t %s', escapeshellarg($phpBinary), escapeshellarg($docRoot));
+$serverCmd = sprintf('%s -S 127.0.0.1:%s -t %s', escapeshellarg($phpBinary), $port, escapeshellarg($docRoot));
 $tmpDir = sys_get_temp_dir();
 $stdoutLog = $tmpDir . '/smoke_server.log';
 $stderrLog = $tmpDir . '/smoke_server.err';

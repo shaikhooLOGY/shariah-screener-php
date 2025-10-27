@@ -12,6 +12,9 @@ use App\Controllers\Superadmin\EngineController as SAEngineController;
 use App\Controllers\Superadmin\BucketsController as SABucketsController;
 use App\Controllers\Superadmin\SystemController as SASystemController;
 use App\Controllers\Superadmin\AuditController as SAAuditController;
+use App\Controllers\Admin\ApprovalsController as AdminApprovalsController;
+use App\Controllers\Superadmin\ApprovalsController as SAApprovalsController;
+use App\Controllers\Superadmin\CmvController as SACmvController;
 
 // Public pages
 route('GET', '/', [GenericPageController::class, 'home']);
@@ -64,6 +67,8 @@ guard('admin', function () {
     route('GET', '/dashboard/admin/settings', [GenericPageController::class, 'adminSettings']);
 });
 
+route('POST', '/admin/approvals', [AdminApprovalsController::class, 'create']);
+
 // Health checks
 route('GET', '/health', [HealthController::class, 'index']);
 route('GET', '/prod-health', [HealthController::class, 'index']);
@@ -87,4 +92,13 @@ guard('superadmin', function () {
 
     route('GET', '/dashboard/superadmin/audit', [SAAuditController::class, 'index']);
     route('GET', '/sa/audit/export', [SAAuditController::class, 'exportCsv']);
+
+    route('POST', '/superadmin/approvals/{id}/approve', [SAApprovalsController::class, 'approve']);
+    route('POST', '/superadmin/approvals/{id}/reject', [SAApprovalsController::class, 'reject']);
+
+    route('GET', '/dashboard/superadmin/cmv', [SACmvController::class, 'index']);
+    route('POST', '/dashboard/superadmin/cmv/run', [SACmvController::class, 'run']);
+    route('GET', '/dashboard/superadmin/cmv/{id}/diff', [SACmvController::class, 'diff']);
+    route('POST', '/dashboard/superadmin/cmv/{id}/publish', [SACmvController::class, 'publish']);
+    route('POST', '/dashboard/superadmin/cmv/{id}/rollback', [SACmvController::class, 'rollback']);
 });
