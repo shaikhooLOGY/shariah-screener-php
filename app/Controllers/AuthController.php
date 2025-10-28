@@ -48,7 +48,7 @@ class AuthController extends Controller
         }
 
         $pdo = db_pdo();
-        $stmt = $pdo->prepare('SELECT id, name, email, password_hash, role, active FROM users WHERE LOWER(email) = :email LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, name, email, COALESCE(password_hash, password) AS password_hash, role, active FROM users WHERE LOWER(email) = :email LIMIT 1');
         $stmt->execute([':email' => $email]);
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -90,6 +90,57 @@ class AuthController extends Controller
         $_SESSION['csrf'] = bin2hex(random_bytes(16));
         set_flash('info', 'Safely logged out.');
         $this->redirect('/login');
+    }
+
+    public function impersonate(string $role): void
+    {
+        // Only allow in development
+        if (($_ENV['APP_ENV'] ?? 'production') !== 'development') {
+            http_response_code(403);
+            echo '403 Forbidden - Development only';
+            exit;
+        }
+
+        $allowedRoles = ['superadmin', 'admin', 'mufti', 'user'];
+        if (!in_array($role, $allowedRoles, true)) {
+            http_response_code(400);
+            echo '400 Bad Request - Invalid role';
+            exit;
+        }
+
+        // Get demo user for this role
+        $demoEmails = [
+            'superadmin' => 'super@demo.com',
+            'admin' => 'admin@demo.com',
+            'mufti' => 'mufti@demo.com',
+            'user' => 'user@demo.com',
+        ];
+
+        $pdo = db_pdo();
+        $stmt = $pdo->prepare('SELECT id, name, email, role FROM users WHERE LOWER(email) = :email AND active = 1 LIMIT 1');
+        $stmt->execute([':email' => $demoEmails[$role]]);
+        $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            http_response_code(404);
+            echo '404 Not Found - Demo user not found';
+            exit;
+        }
+
+        // Set session
+        session_regenerate_id(true);
+        $_SESSION['user'] = [
+            'id' => (int)$user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+        ];
+        $_SESSION['user_id'] = (int)$user['id'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['csrf'] = bin2hex(random_bytes(16));
+
+        // Redirect to home
+        header('Location: /');
+        exit;
     }
 
     private function redirect(string $url): void

@@ -9,6 +9,22 @@ class GenericPageController extends Controller
         $this->view('pages/home', ['title' => 'Home']);
     }
 
+    public function go(): void {
+        $q = trim((string)($_GET['q'] ?? ''));
+        if (!$q) {
+            header('Location: /');
+            exit;
+        }
+
+        // Heuristic: 2-10 alphanumeric characters = ticker
+        if (preg_match('/^[A-Z0-9]{2,10}$/i', $q)) {
+            header('Location: /company/' . strtoupper($q));
+        } else {
+            header('Location: /companies?q=' . urlencode($q));
+        }
+        exit;
+    }
+
     public function explore(): void {
         $this->view('pages/explore', ['title' => 'Explore']);
     }

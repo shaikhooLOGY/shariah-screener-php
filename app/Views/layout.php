@@ -80,7 +80,7 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
         document.documentElement.style.cssText = '';
     </script>
 </head>
-<body class="min-h-full font-sans antialiased" x-data="appLayout()" x-on:keydown.window.prevent.cmd-k="toggleCommandPalette(true)" x-on:keydown.window.prevent.ctrl-k="toggleCommandPalette(true)" data-skin="<?php echo htmlspecialchars($skin); ?>">
+<body class="min-h-full font-sans antialiased" x-data="appLayout()" x-on:keydown.window.prevent.cmd-k="toggleCommandPalette(true)" x-on:keydown.window.prevent.ctrl-k="toggleCommandPalette(true)" data-skin="<?php echo htmlspecialchars($skin); ?>" data-theme="light">
 <a href="#main" class="skip-to-content focus-visible:ring">Skip to content</a>
 
 <!-- Top Header Navigation -->

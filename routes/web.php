@@ -28,6 +28,7 @@ use App\Controllers\Mufti\DashboardController as MuftiDashboardController;
 route('GET', '/', [GenericPageController::class, 'home']);
 route('GET', '/explore', [GenericPageController::class, 'explore']);
 route('GET', '/companies', [GenericPageController::class, 'companies']);
+route('GET', '/go', [GenericPageController::class, 'go']);
 
 // Company profile & related
 route('GET', '/company/{symbol}', [CompanyController::class, 'show']);
@@ -89,6 +90,9 @@ route('POST', '/admin/approvals', [AdminApprovalsController::class, 'create']);
 // Health checks
 route('GET', '/health', [HealthController::class, 'index']);
 route('GET', '/prod-health', [HealthController::class, 'index']);
+
+// Dev-only role switch (development only)
+route('GET', '/__as/{role}', [AuthController::class, 'impersonate']);
 
 guard('superadmin', function () {
     route('GET', '/dashboard/superadmin', [SASystemController::class, 'index']);

@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS suggestions (
 /* seed companies if missing */
 $companyExists = (int)$pdo->query("SELECT COUNT(*) FROM companies WHERE ticker='TCS'")->fetchColumn();
 if ($companyExists === 0) {
-  $pdo->exec("INSERT OR IGNORE INTO companies (isin, ticker, name, sector_code, country, description)
-  VALUES ('INE467B01029','TCS','Tata Consultancy Services','IT','India','Seed row for local demo');");
+  $pdo->exec("INSERT OR IGNORE INTO companies (isin, ticker, name)
+  VALUES ('INE467B01029','TCS','Tata Consultancy Services');");
 }
 
 /* seed thread if missing */
@@ -316,11 +316,18 @@ $pdo->exec("INSERT OR IGNORE INTO role_abilities (role, ability_key) VALUES
 
 /* seed users with hashed passwords */
 $secretHash = password_hash('secret', PASSWORD_DEFAULT);
-$pdo->exec("INSERT OR IGNORE INTO users (name, email, password, role, active) VALUES
+$pdo->exec("INSERT OR IGNORE INTO users (name, email, password_hash, role, active) VALUES
 ('Shaikh Super', 'super@shaikhoology.test', '{$secretHash}', 'superadmin', 1),
 ('Admin User', 'admin@shaikhoology.test', '{$secretHash}', 'admin', 1),
 ('Mufti Expert', 'mufti@shaikhoology.test', '{$secretHash}', 'mufti', 1),
 ('Regular User', 'user@shaikhoology.test', '{$secretHash}', 'user', 1);");
+
+/* seed demo users for impersonation */
+$pdo->exec("INSERT OR IGNORE INTO users (name, email, password_hash, role, active) VALUES
+('Demo Superadmin', 'super@demo.com', '{$secretHash}', 'superadmin', 1),
+('Demo Admin', 'admin@demo.com', '{$secretHash}', 'admin', 1),
+('Demo Mufti', 'mufti@demo.com', '{$secretHash}', 'mufti', 1),
+('Demo User', 'user@demo.com', '{$secretHash}', 'user', 1);");
 
 /* seed CMV demo data */
 $pdo->exec("INSERT OR IGNORE INTO compliance_master_versions (label, period, status, note, created_by) VALUES

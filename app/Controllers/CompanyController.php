@@ -89,50 +89,35 @@ class CompanyController extends Controller
                 $openControversiesCount = (int)$stmt->fetchColumn();
             }
 
-            // Get published CMV result
+            // Get published CMV result with financial KPIs
             $stmt = $pdo->prepare("
-                SELECT cmv.label, cmv.period, cr.final_score, cr.verdict, cr.breaches_json
-                FROM compliance_master_current cmc
-                JOIN compliance_master_versions cmv ON cmv.id = cmc.cmv_id_published
-                LEFT JOIN cmv_results cr ON cr.cmv_id = cmv.id AND cr.company_id = :cid
-                WHERE cmc.id = 1
+                SELECT r.financial_json, r.activity_json, v.period, v.id AS cmv_id, r.final_score, r.verdict, r.breaches_json
+                FROM compliance_master_current cur
+                JOIN compliance_master_versions v ON v.id = cur.cmv_id_published
+                LEFT JOIN cmv_results r ON r.cmv_id = v.id AND r.company_id = :cid
+                WHERE cur.id = 1
             ");
             $stmt->execute([':cid' => $company['id']]);
             $cmvResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($cmvResult) {
+            if ($cmvResult && $cmvResult['financial_json']) {
+                $financialData = json_decode($cmvResult['financial_json'], true);
                 $cmvInfo = [
-                    'label' => $cmvResult['label'],
+                    'label' => 'Published CMV',
                     'period' => $cmvResult['period'],
                     'final_score' => $cmvResult['final_score'],
                     'verdict' => $cmvResult['verdict'],
-                    'breaches' => json_decode($cmvResult['breaches_json'] ?? '[]', true)
+                    'breaches' => json_decode($cmvResult['breaches_json'] ?? '[]', true),
+                    'debt_assets_pct' => $financialData['debt_assets_pct'] ?? 0,
+                    'interest_revenue_pct' => $financialData['interest_revenue_pct'] ?? 0,
+                    'cash_recv_assets_pct' => $financialData['cash_recv_assets_pct'] ?? 0,
+                    'non_shariah_revenue_pct' => $financialData['non_shariah_revenue_pct'] ?? 0
                 ];
                 $verdict = ucfirst($cmvResult['verdict']);
             } else {
                 // No published CMV yet - show graceful empty state
                 $verdict = 'No published CMV yet';
                 $cmvInfo = null;
-
-                // Still show legacy engine results if filing exists
-                if ($filing) {
-                    $engine = new ScreeningEngine();
-                    $ratios = $engine->compute($filing);
-
-                    $caps = $this->caps();
-                    $pass = true;
-
-                    if ($ratios['debt_pct'] > $caps['debt']) { $pass = false; $why[] = 'Debt exceeds cap'; }
-                    if ($ratios['interest_pct'] > $caps['interest']) { $pass = false; $why[] = 'Interest income exceeds cap'; }
-                    if ($ratios['liquid_pct'] < $caps['liquid']) { $pass = false; $why[] = 'Liquid assets below cap'; }
-                    if ($ratios['nonsh_pct'] > $caps['nonsh']) { $pass = false; $why[] = 'Non-Shari\'ah income exceeds cap'; }
-
-                    if ($pass) {
-                        $verdict = 'Pass (Legacy - No CMV)';
-                    } else {
-                        $verdict = 'Fail (Legacy - No CMV)';
-                    }
-                }
             }
 
             // Get CMV history (last 3)
@@ -157,13 +142,13 @@ class CompanyController extends Controller
     }
 
     private function computeCompanyHeader($pdo, $companyId) {
-        // Get published CMV result
+        // Get published CMV result with financial KPIs
         $stmt = $pdo->prepare("
-            SELECT cmv.label, cmv.period, cr.final_score, cr.verdict, cr.breaches_json
-            FROM compliance_master_current cmc
-            JOIN compliance_master_versions cmv ON cmv.id = cmc.cmv_id_published
-            LEFT JOIN cmv_results cr ON cr.cmv_id = cmv.id AND cr.company_id = :cid
-            WHERE cmc.id = 1
+            SELECT r.financial_json, v.period, r.final_score, r.verdict, r.breaches_json
+            FROM compliance_master_current cur
+            JOIN compliance_master_versions v ON v.id = cur.cmv_id_published
+            LEFT JOIN cmv_results r ON r.cmv_id = v.id AND r.company_id = :cid
+            WHERE cur.id = 1
         ");
         $stmt->execute([':cid' => $companyId]);
         $cmvResult = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -171,13 +156,18 @@ class CompanyController extends Controller
         $verdict = 'No published CMV yet';
         $cmvInfo = null;
 
-        if ($cmvResult) {
+        if ($cmvResult && $cmvResult['financial_json']) {
+            $financialData = json_decode($cmvResult['financial_json'], true);
             $cmvInfo = [
-                'label' => $cmvResult['label'],
+                'label' => 'Published CMV',
                 'period' => $cmvResult['period'],
                 'final_score' => $cmvResult['final_score'],
                 'verdict' => $cmvResult['verdict'],
-                'breaches' => json_decode($cmvResult['breaches_json'] ?? '[]', true)
+                'breaches' => json_decode($cmvResult['breaches_json'] ?? '[]', true),
+                'debt_assets_pct' => $financialData['debt_assets_pct'] ?? 0,
+                'interest_revenue_pct' => $financialData['interest_revenue_pct'] ?? 0,
+                'cash_recv_assets_pct' => $financialData['cash_recv_assets_pct'] ?? 0,
+                'non_shariah_revenue_pct' => $financialData['non_shariah_revenue_pct'] ?? 0
             ];
             $verdict = ucfirst($cmvResult['verdict']);
         }

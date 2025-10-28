@@ -17,6 +17,14 @@
   --rose: #ef4444;
   --ring: rgba(99,102,241,0.35);
 
+  /* Dark mode variables */
+  --bg: #0B0F19;
+  --panel: #121624;
+  --muted: #A8B0C0;
+  --line: #20273a;
+  --text: #EAECEE;
+  --primary: #5B63FF;
+
   /* Skin variables */
   --brand-bg: #ffffff;
   --brand-fg: #0f172a;
