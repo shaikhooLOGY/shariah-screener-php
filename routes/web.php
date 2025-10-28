@@ -28,24 +28,6 @@ use App\Controllers\Mufti\DashboardController as MuftiDashboardController;
 route('GET', '/', [GenericPageController::class, 'home']);
 route('GET', '/explore', [GenericPageController::class, 'explore']);
 route('GET', '/companies', [GenericPageController::class, 'companies']);
-route('GET', '/methodology', [GenericPageController::class, 'methodology']);
-route('GET', '/standards', [GenericPageController::class, 'standards']);
-route('GET', '/case-studies', [GenericPageController::class, 'caseStudies']);
-route('GET', '/faq', [GenericPageController::class, 'faq']);
-route('GET', '/glossary', [GenericPageController::class, 'glossary']);
-route('GET', '/about', [GenericPageController::class, 'about']);
-route('GET', '/contact', [GenericPageController::class, 'contact']);
-route('GET', '/terms', [GenericPageController::class, 'terms']);
-route('GET', '/privacy', [GenericPageController::class, 'privacy']);
-route('GET', '/disclaimer', [GenericPageController::class, 'disclaimer']);
-route('GET', '/purification', [GenericPageController::class, 'purification']);
-route('GET', '/scholars', [GenericPageController::class, 'scholars']);
-route('GET', '/scholar/{slug}', [GenericPageController::class, 'scholarProfile']);
-route('GET', '/learn', [GenericPageController::class, 'learn']);
-route('GET', '/articles', [GenericPageController::class, 'articles']);
-route('GET', '/articles/{slug}', [GenericPageController::class, 'articleShow']);
-route('GET', '/discussions', [GenericPageController::class, 'discussions']);
-route('GET', '/suggest-ratios', [GenericPageController::class, 'suggestRatios']);
 
 // Company profile & related
 route('GET', '/company/{symbol}', [CompanyController::class, 'show']);

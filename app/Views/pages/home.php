@@ -4,7 +4,7 @@ $title = 'Home';
 $breadcrumbs = [];
 ob_start();
 ?>
-<section class="relative overflow-hidden rounded-3xl border border-surface-200 bg-white px-6 py-16 text-center shadow-sm dark:border-surface-800 dark:bg-surface-950">
+<section class="relative overflow-hidden rounded-3xl border border-surface-200 bg-white px-6 py-16 text-center shadow-sm theme-dark:border-surface-700 theme-dark:bg-surface-900">
   <div class="absolute inset-0 -z-10 bg-gradient-to-br from-indigo-500/10 via-transparent to-emerald-500/10 dark:from-indigo-500/20 dark:to-emerald-500/20"></div>
   <div class="mx-auto flex max-w-4xl flex-col items-center gap-6">
     <span class="badge-soft">Search-first Shari'ah console</span>

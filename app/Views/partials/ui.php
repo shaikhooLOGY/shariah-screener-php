@@ -246,3 +246,11 @@ function ui_kpi($title, $value, $status) {
         </div>
     </div>";
 }
+
+function ui_checkbox($name, $label, $checked = false, $class = '') {
+    $checkedAttr = $checked ? 'checked' : '';
+    return "<label class='flex items-center {$class}'>
+        <input type='checkbox' name='{$name}' {$checkedAttr} class='rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500'>
+        <span class='ml-2 text-sm text-gray-700'>{$label}</span>
+    </label>";
+}

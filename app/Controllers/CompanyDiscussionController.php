@@ -7,7 +7,7 @@ use PDO;
 class CompanyDiscussionController extends Controller
 {
     private function pdo(): PDO {
-        $dsn  = $_ENV['DB_DSN']  ?? 'sqlite:./storage/shaikhoology.sqlite';
+        $dsn  = $_ENV['DB_DSN']  ?? 'sqlite:/Users/shaikhoology/SM/MAIN-Shaikhoology/ShriahScreenerShaikhoology/storage/shaikhoology.sqlite';
         $user = $_ENV['DB_USER'] ?? '';
         $pass = $_ENV['DB_PASS'] ?? '';
         return new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);

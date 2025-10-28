@@ -48,7 +48,7 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
 }
 ?>
 <!doctype html>
-<html lang="en" class="h-full" x-data="themeDetector()" x-bind:class="theme">
+<html lang="en" class="h-full" x-data="themeDetector()" :class="theme === 'dark' ? 'theme-dark' : ''">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -80,7 +80,7 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
         document.documentElement.style.cssText = '';
     </script>
 </head>
-<body class="min-h-full font-sans text-gray-700 antialiased" x-data="appLayout()" x-on:keydown.window.prevent.cmd-k="toggleCommandPalette(true)" x-on:keydown.window.prevent.ctrl-k="toggleCommandPalette(true)" data-skin="<?php echo htmlspecialchars($skin); ?>">
+<body class="min-h-full font-sans antialiased" x-data="appLayout()" x-on:keydown.window.prevent.cmd-k="toggleCommandPalette(true)" x-on:keydown.window.prevent.ctrl-k="toggleCommandPalette(true)" data-skin="<?php echo htmlspecialchars($skin); ?>">
 <a href="#main" class="skip-to-content focus-visible:ring">Skip to content</a>
 
 <!-- Top Header Navigation -->
@@ -177,11 +177,6 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
                 $navItems = [
                     ['href' => '/', 'label' => 'Home', 'icon' => 'home'],
                     ['href' => '/companies', 'label' => 'Companies', 'icon' => 'building'],
-                    ['href' => '/methodology', 'label' => 'Methodology', 'icon' => 'book-open'],
-                    ['href' => '/case-studies', 'label' => 'Case Studies', 'icon' => 'folder'],
-                    ['href' => '/faq', 'label' => 'FAQ', 'icon' => 'help-circle'],
-                    ['href' => '/glossary', 'label' => 'Glossary', 'icon' => 'dictionary'],
-                    ['href' => '/discussions', 'label' => 'Discussions', 'icon' => 'message-circle'],
                 ];
 
                 foreach ($navItems as $item):
@@ -399,6 +394,7 @@ document.addEventListener('alpine:init', () => {
         },
         applyTheme() {
             document.documentElement.classList.toggle('dark', this.theme === 'dark');
+            document.documentElement.classList.toggle('theme-dark', this.theme === 'dark');
         }
     }));
 
