@@ -7,6 +7,8 @@ use function current_user;
 use function user_can;
 use function audit_log;
 use function set_flash;
+use function paginate_query;
+use function pagination_links;
 
 class TasksController extends Controller
 {
@@ -20,21 +22,25 @@ class TasksController extends Controller
         }
 
         $pdo = db_pdo();
+        $page = (int)($_GET['page'] ?? 1);
+        $perPage = (int)($_GET['per'] ?? 25);
 
-        // Get all tasks with company and assignee info
-        $stmt = $pdo->query("
+        // Get paginated tasks with company and assignee info
+        $query = "
             SELECT t.*, c.ticker, c.name as company_name,
-                   u.name as assignee_name, creator.name as creator_name
+                    u.name as assignee_name, creator.name as creator_name
             FROM tasks t
             LEFT JOIN companies c ON c.id = t.company_id
             LEFT JOIN users u ON u.id = t.assignee_id
             LEFT JOIN users creator ON creator.id = t.created_by
             ORDER BY t.created_at DESC
-        ");
-        $tasks = $stmt->fetchAll();
+        ";
+
+        $result = paginate_query($pdo, $query, [], $page, $perPage);
 
         $this->view('admin/tasks/index', [
-            'tasks' => $tasks
+            'tasks' => $result['items'],
+            'pagination' => $result['pagination']
         ]);
     }
 
@@ -67,9 +73,17 @@ class TasksController extends Controller
 
         $stmt = $pdo->prepare("
             INSERT INTO tasks (title, type, company_id, payload_json, priority, assignee_id, status, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, 'open', ?)
+            VALUES (:title, :type, :cid, :payload, :priority, :aid, 'open', :creator)
         ");
-        $stmt->execute([$title, $type, $companyId, json_encode($payload), $priority, $assigneeId, $user['id']]);
+        $stmt->execute([
+            ':title' => $title,
+            ':type' => $type,
+            ':cid' => $companyId,
+            ':payload' => json_encode($payload),
+            ':priority' => $priority,
+            ':aid' => $assigneeId,
+            ':creator' => $user['id']
+        ]);
         $taskId = $pdo->lastInsertId();
 
         audit_log($user['id'], 'task.create', 'tasks', $taskId, [
@@ -119,9 +133,8 @@ class TasksController extends Controller
             return;
         }
 
-        $values[] = $taskId;
-        $stmt = $pdo->prepare("UPDATE tasks SET " . implode(', ', $setParts) . ", updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-        $stmt->execute($values);
+        $stmt = $pdo->prepare("UPDATE tasks SET " . implode(', ', $setParts) . ", updated_at = CURRENT_TIMESTAMP WHERE id = :tid");
+        $stmt->execute(array_merge($values, [':tid' => $taskId]));
 
         audit_log($user['id'], 'task.update', 'tasks', $taskId, [
             'updates' => $updates
@@ -133,8 +146,8 @@ class TasksController extends Controller
     private function assignToBestMufti($pdo, $companyId): ?int
     {
         // Get company sector
-        $stmt = $pdo->prepare("SELECT sector FROM companies WHERE id = ?");
-        $stmt->execute([$companyId]);
+        $stmt = $pdo->prepare("SELECT sector FROM companies WHERE id = :cid");
+        $stmt->execute([':cid' => $companyId]);
         $company = $stmt->fetch();
 
         if (!$company || !$company['sector']) {

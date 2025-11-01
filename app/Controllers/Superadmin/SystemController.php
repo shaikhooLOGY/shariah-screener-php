@@ -38,10 +38,33 @@ class SystemController extends BaseController
         $this->requirePost();
         $this->assertCsrf();
 
-        $value = isset($_POST['value']) ? (int)$_POST['value'] : 0;
-        $label = trim((string)($_POST['label'] ?? $key));
         $pdo = $this->pdo();
         $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+        if ($key === 'ui.skin') {
+            // Special handling for UI skin
+            $skinValue = trim((string)($_POST['skin_value'] ?? 'classic'));
+            if (!in_array($skinValue, ['classic', 'aurora', 'noor'])) {
+                $skinValue = 'classic';
+            }
+            // Update .env file
+            $envFile = app_root() . '/.env';
+            if (is_file($envFile)) {
+                $envContent = file_get_contents($envFile);
+                $envContent = preg_replace('/^UI_SKIN=.*/m', "UI_SKIN={$skinValue}", $envContent);
+                if (!preg_match('/^UI_SKIN=/m', $envContent)) {
+                    $envContent .= "\nUI_SKIN={$skinValue}";
+                }
+                file_put_contents($envFile, $envContent);
+            }
+            audit_log($this->actorId(), 'ui.skin.change', 'config', 'ui.skin', ['skin' => $skinValue]);
+            $this->flash('success', sprintf('UI skin changed to %s.', ucfirst($skinValue)));
+            $this->redirect('/dashboard/superadmin/system');
+            return;
+        }
+
+        $value = isset($_POST['value']) ? (int)$_POST['value'] : 0;
+        $label = trim((string)($_POST['label'] ?? $key));
 
         if ($driver === 'sqlite') {
             $stmt = $pdo->prepare('INSERT INTO feature_flags (key, value, label, updated_at) VALUES (:key, :value, :label, CURRENT_TIMESTAMP)

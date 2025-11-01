@@ -9,3 +9,6 @@ route('GET','/dashboard/superadmin/ulama', [App\Controllers\Superadmin\UlamaBoar
 route('GET','/dashboard/superadmin/audit-legal', [App\Controllers\Superadmin\AuditLegalController::class,'index']);
 route('GET','/dashboard/superadmin/governance', [App\Controllers\Superadmin\GovernanceController::class,'index']);
 route('GET','/dashboard/superadmin/feature-flags', [App\Controllers\Superadmin\FeatureFlagsController::class,'index']);
+route('GET','/dashboard/superadmin/master-sheet', [App\Controllers\Superadmin\MasterSheetController::class,'masterSheet']);
+route('POST','/dashboard/superadmin/master-sheet/edit/{id}', [App\Controllers\Superadmin\MasterSheetController::class,'editRatio']);
+route('POST','/dashboard/superadmin/master-sheet/delete/{id}', [App\Controllers\Superadmin\MasterSheetController::class,'deleteRatio']);

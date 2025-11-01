@@ -8,7 +8,7 @@ function ui_card($title, $content, $class = '') {
     </div>";
 }
 
-function ui_button($label, $type = 'primary', $class = '') {
+function ui_button($label, $type = 'primary', $class = '', $ariaLabel = '', $disabled = false) {
     if (is_array($class)) {
         // Handle array format like ['href' => '/path']
         $href = $class['href'] ?? '';
@@ -23,21 +23,23 @@ function ui_button($label, $type = 'primary', $class = '') {
     }
 
     $colors = [
-        'primary' => 'bg-indigo-600 text-white hover:bg-indigo-700',
-        'secondary' => 'bg-gray-200 text-gray-900 hover:bg-gray-300',
-        'danger' => 'bg-red-600 text-white hover:bg-red-700',
-        'success' => 'bg-green-600 text-white hover:bg-green-700',
-        'link' => 'text-indigo-600 hover:text-indigo-800 underline',
-        'soft' => 'bg-gray-100 text-gray-900 hover:bg-gray-200',
-        'ghost' => 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        'primary' => 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed',
+        'secondary' => 'bg-gray-200 text-gray-900 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed',
+        'danger' => 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed',
+        'success' => 'bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed',
+        'link' => 'text-indigo-600 hover:text-indigo-800 underline disabled:text-indigo-400 disabled:cursor-not-allowed',
+        'soft' => 'bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed',
+        'ghost' => 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
     ];
 
     $baseClasses = 'inline-flex items-center justify-center rounded-lg border border-transparent px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
+    $ariaAttr = $ariaLabel ? " aria-label='{$ariaLabel}'" : '';
+    $disabledAttr = $disabled ? ' disabled' : '';
 
-    if ($href) {
-        return "<a href='{$href}' class='{$baseClasses} {$colors[$type]} {$class}'>{$label}</a>";
+    if ($href && !$disabled) {
+        return "<a href='{$href}' class='{$baseClasses} {$colors[$type]} {$class}'{$ariaAttr}>{$label}</a>";
     } else {
-        return "<button class='{$baseClasses} {$colors[$type]} {$class}'>{$label}</button>";
+        return "<button class='{$baseClasses} {$colors[$type]} {$class}'{$ariaAttr}{$disabledAttr}>{$label}</button>";
     }
 }
 
@@ -47,11 +49,13 @@ function ui_badge($label, $type = 'default', $class = '') {
         'primary' => 'bg-indigo-100 text-indigo-800',
         'success' => 'bg-green-100 text-green-800',
         'warning' => 'bg-yellow-100 text-yellow-800',
+        'warn' => 'bg-yellow-100 text-yellow-800',
         'danger' => 'bg-red-100 text-red-800',
         'info' => 'bg-blue-100 text-blue-800'
     ];
 
-    return "<span class='inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {$colors[$type]} {$class}'>{$label}</span>";
+    $colorClass = $colors[$type] ?? $colors['default'];
+    return "<span class='inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {$colorClass} {$class}'>{$label}</span>";
 }
 
 function ui_chip($label, $type = 'default', $class = '') {
@@ -67,10 +71,10 @@ function ui_chip($label, $type = 'default', $class = '') {
 }
 
 function ui_table($headers, $rows, $class = '') {
-    $html = "<div class='overflow-x-auto'><table class='min-w-full divide-y divide-gray-200 {$class}'>";
+    $html = "<div class='overflow-x-auto relative'><table class='min-w-full divide-y divide-gray-200 {$class}'>";
 
     if ($headers) {
-        $html .= "<thead class='bg-gray-50'><tr>";
+        $html .= "<thead class='bg-gray-50 sticky top-0 z-10 shadow-sm'><tr>";
         foreach ($headers as $header) {
             $html .= "<th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>{$header}</th>";
         }
@@ -101,9 +105,11 @@ function ui_form_field($label, $input, $class = '') {
 function ui_select($name, $options, $selected = '', $class = '') {
     $html = "<select name='{$name}' class='block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 {$class}'>";
 
-    foreach ($options as $value => $label) {
-        $isSelected = $selected === $value ? 'selected' : '';
-        $html .= "<option value='{$value}' {$isSelected}>{$label}</option>";
+    if (is_array($options)) {
+        foreach ($options as $value => $label) {
+            $isSelected = $selected === $value ? 'selected' : '';
+            $html .= "<option value='{$value}' {$isSelected}>{$label}</option>";
+        }
     }
 
     $html .= "</select>";
@@ -239,4 +245,12 @@ function ui_kpi($title, $value, $status) {
             </div>
         </div>
     </div>";
+}
+
+function ui_checkbox($name, $label, $checked = false, $class = '') {
+    $checkedAttr = $checked ? 'checked' : '';
+    return "<label class='flex items-center {$class}'>
+        <input type='checkbox' name='{$name}' {$checkedAttr} class='rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500'>
+        <span class='ml-2 text-sm text-gray-700'>{$label}</span>
+    </label>";
 }

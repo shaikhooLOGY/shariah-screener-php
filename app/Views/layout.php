@@ -3,20 +3,9 @@ require_once __DIR__.'/partials/ui.php';
 
 // Load UI configuration
 $uiConfigPath = app_root() . '/config/ui.php';
-$uiConfig = is_file($uiConfigPath) ? require $uiConfigPath : ['skin' => 'GandFade', 'nav_position' => 'top', 'density' => 'compact'];
-$skin = $_GET['skin'] ?? $_ENV['UI_SKIN'] ?? $uiConfig['skin'];
-$skin = in_array($skin, ['GandFade', 'AuroraGlass', 'NeutralPro']) ? $skin : 'GandFade';
-
-// Get skin configuration
-$skins = $uiConfig['skins'] ?? [];
-$currentSkin = $skins[$skin] ?? $skins['GandFade'];
-
-// Set CSS variables for current skin
-$cssVars = $currentSkin['css_vars'] ?? [];
-$cssVarString = '';
-foreach ($cssVars as $key => $value) {
-    $cssVarString .= "{$key}: {$value}; ";
-}
+$uiConfig = is_file($uiConfigPath) ? require $uiConfigPath : ['skin' => 'classic'];
+$skin = $_GET['skin'] ?? $uiConfig['skin'];
+$skin = in_array($skin, ['classic', 'aurora', 'noor']) ? $skin : 'classic';
 
 $siteTitle = 'Shaikhoology Screener';
 $pageTitle = isset($title) && $title !== '' ? $title . ' · ' . $siteTitle : $siteTitle;
@@ -59,7 +48,7 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
 }
 ?>
 <!doctype html>
-<html lang="en" class="h-full" x-data="themeDetector()" x-bind:class="theme">
+<html lang="en" class="h-full" x-data="themeDetector()" :class="theme === 'dark' ? 'theme-dark' : ''">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -70,10 +59,9 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css?v=<?php echo htmlspecialchars(env('BUILD_TS', time())); ?>">
     <script defer src="https://unpkg.com/alpinejs@3.13.10/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script defer src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+    <script defer src="/assets/js/app.min.js?v=<?php echo htmlspecialchars(env('BUILD_TS', time())); ?>"></script>
     <script>
         window.APP = Object.assign({}, window.APP || {}, {
             csrf: <?php echo json_encode($csrf); ?>,
@@ -89,40 +77,10 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
         });
 
         // Apply skin CSS variables
-        document.documentElement.style.cssText = <?php echo json_encode($cssVarString); ?>;
+        document.documentElement.style.cssText = '';
     </script>
-    <style>
-        /* Skin-specific styles */
-        <?php if ($skin === 'GandFade'): ?>
-        .skin-gandfade {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        <?php elseif ($skin === 'AuroraGlass'): ?>
-        .skin-auroraglass {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        <?php elseif ($skin === 'NeutralPro'): ?>
-        .skin-neutralpro {
-            background: #f8fafc;
-        }
-        .glass-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-        }
-        <?php endif; ?>
-    </style>
 </head>
-<body class="min-h-full font-sans text-gray-700 antialiased" x-data="appLayout()" x-on:keydown.window.prevent.cmd-k="toggleCommandPalette(true)" x-on:keydown.window.prevent.ctrl-k="toggleCommandPalette(true)">
+<body class="min-h-full font-sans antialiased" x-data="appLayout()" x-on:keydown.window.prevent.cmd-k="toggleCommandPalette(true)" x-on:keydown.window.prevent.ctrl-k="toggleCommandPalette(true)" data-skin="<?php echo htmlspecialchars($skin); ?>" data-theme="light">
 <a href="#main" class="skip-to-content focus-visible:ring">Skip to content</a>
 
 <!-- Top Header Navigation -->
@@ -167,9 +125,9 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
 
                 <!-- Skin selector -->
                 <select x-model="currentSkin" x-on:change="changeSkin($event.target.value)" class="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    <option value="GandFade">GandFade</option>
-                    <option value="AuroraGlass">AuroraGlass</option>
-                    <option value="NeutralPro">NeutralPro</option>
+                    <option value="classic">Classic</option>
+                    <option value="aurora">Aurora</option>
+                    <option value="noor">Noor</option>
                 </select>
 
                 <?php if ($role === 'guest'): ?>
@@ -219,11 +177,6 @@ if ($role !== 'guest' && function_exists('db_pdo')) {
                 $navItems = [
                     ['href' => '/', 'label' => 'Home', 'icon' => 'home'],
                     ['href' => '/companies', 'label' => 'Companies', 'icon' => 'building'],
-                    ['href' => '/methodology', 'label' => 'Methodology', 'icon' => 'book-open'],
-                    ['href' => '/case-studies', 'label' => 'Case Studies', 'icon' => 'folder'],
-                    ['href' => '/faq', 'label' => 'FAQ', 'icon' => 'help-circle'],
-                    ['href' => '/glossary', 'label' => 'Glossary', 'icon' => 'dictionary'],
-                    ['href' => '/discussions', 'label' => 'Discussions', 'icon' => 'message-circle'],
                 ];
 
                 foreach ($navItems as $item):
@@ -441,6 +394,7 @@ document.addEventListener('alpine:init', () => {
         },
         applyTheme() {
             document.documentElement.classList.toggle('dark', this.theme === 'dark');
+            document.documentElement.classList.toggle('theme-dark', this.theme === 'dark');
         }
     }));
 

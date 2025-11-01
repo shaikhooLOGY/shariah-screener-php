@@ -5,7 +5,7 @@ $breadcrumbs = [
     ['label' => 'Home', 'href' => '/'],
     ['label' => 'Error', 'href' => '#'],
 ];
-$requestId = $_ENV['REQUEST_ID'] ?? strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+$requestId = $_SERVER['HTTP_X_REQUEST_ID'] ?? strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
 $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 ob_start();
 ?>

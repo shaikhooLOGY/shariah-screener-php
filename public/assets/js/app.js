@@ -85,23 +85,55 @@
         toast.style.transform = 'translateY(-8px)';
         setTimeout(() => toast.remove(), 250);
       }, 3800);
+    },
+
+    debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
     }
   };
 
   function initCharts() {
-    if (!window.Chart) return;
-    document.querySelectorAll('[data-chart]').forEach((wrapper) => {
-      if (wrapper.__chart) return;
-      try {
-        const config = JSON.parse(wrapper.dataset.chart || '{}');
-        const canvas = wrapper.querySelector('canvas');
-        if (canvas && config.type) {
-          wrapper.__chart = new Chart(canvas.getContext('2d'), config);
+    // Lazy load Chart.js only when needed
+    if (!window.Chart && document.querySelector('[data-chart]')) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+      script.onload = () => {
+        document.querySelectorAll('[data-chart]').forEach((wrapper) => {
+          if (wrapper.__chart) return;
+          try {
+            const config = JSON.parse(wrapper.dataset.chart || '{}');
+            const canvas = wrapper.querySelector('canvas');
+            if (canvas && config.type) {
+              wrapper.__chart = new Chart(canvas.getContext('2d'), config);
+            }
+          } catch (err) {
+            console.warn('Chart config error', err);
+          }
+        });
+      };
+      document.head.appendChild(script);
+    } else if (window.Chart) {
+      document.querySelectorAll('[data-chart]').forEach((wrapper) => {
+        if (wrapper.__chart) return;
+        try {
+          const config = JSON.parse(wrapper.dataset.chart || '{}');
+          const canvas = wrapper.querySelector('canvas');
+          if (canvas && config.type) {
+            wrapper.__chart = new Chart(canvas.getContext('2d'), config);
+          }
+        } catch (err) {
+          console.warn('Chart config error', err);
         }
-      } catch (err) {
-        console.warn('Chart config error', err);
-      }
-    });
+      });
+    }
   }
 
   function initCsvButtons(){
@@ -125,9 +157,58 @@
     });
   }
 
+  function initSearchInputs(){
+    document.querySelectorAll('input[type="search"]').forEach((input) => {
+      const debouncedSearch = window.AppUI.debounce((value) => {
+        // Trigger search - could dispatch event or submit form
+        const form = input.closest('form');
+        if (form) {
+          const event = new Event('submit', { cancelable: true });
+          form.dispatchEvent(event);
+        }
+      }, 300);
+
+      input.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+      });
+    });
+  }
+
+  function initLazyImages() {
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src || img.src;
+          img.classList.remove('lazy');
+          observer.unobserve(img);
+        }
+      });
+    });
+    images.forEach(img => imageObserver.observe(img));
+  }
+
+  function initPrefetch() {
+    document.querySelectorAll('a[href]').forEach(link => {
+      link.addEventListener('mouseenter', () => {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('/') && !href.includes('#')) {
+          const linkElement = document.createElement('link');
+          linkElement.rel = 'prefetch';
+          linkElement.href = href;
+          document.head.appendChild(linkElement);
+        }
+      }, { once: true });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     initCsvButtons();
+    initSearchInputs();
+    initLazyImages();
+    initPrefetch();
     if (window.lucide && window.lucide.createIcons) {
       window.lucide.createIcons();
     }

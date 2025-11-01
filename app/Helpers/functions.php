@@ -197,3 +197,21 @@ function audit_log(?int $actorId, string $action, string $entity, string $entity
 
 function percent($n){ return number_format($n*100,2).'%' ;}
 function periodLabel($p){ return $p; }
+
+function env(string $key, $default = null) {
+    return $_ENV[$key] ?? $default;
+}
+
+function app_log(string $level, string $message, array $context = []): void {
+    $logDir = app_root() . '/storage/logs';
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+
+    $logFile = $logDir . '/app.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $contextStr = empty($context) ? '' : ' ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+    $logEntry = "[{$timestamp}] {$level}: {$message}{$contextStr}\n";
+
+    file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
+}

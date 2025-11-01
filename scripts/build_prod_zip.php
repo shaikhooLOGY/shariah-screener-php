@@ -21,8 +21,17 @@ if (!is_dir($distDir)) {
     mkdir($distDir, 0777, true);
 }
 
-$zipName = 'shaikhoology_build_' . date('Ymd_His') . '.zip';
+$buildTs = time();
+$zipName = 'shaikhoology_build_' . date('Ymd_His', $buildTs) . '.zip';
 $zipPath = $distDir . '/' . $zipName;
+
+// Update BUILD_TS in .env.production.example
+$envExample = $root . '/.env.production.example';
+if (file_exists($envExample)) {
+    $envContent = file_get_contents($envExample);
+    $envContent = preg_replace('/BUILD_TS=.*/', "BUILD_TS={$buildTs}", $envContent);
+    file_put_contents($envExample, $envContent);
+}
 
 $zip = new ZipArchive();
 if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {

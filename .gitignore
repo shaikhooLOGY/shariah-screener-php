@@ -2,3 +2,6 @@ vendor/
 .env
 storage/logs/*
 storage/cache/*
+/storage/*.sqlite
+/dist/*
+/public/diag.php
